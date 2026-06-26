@@ -4,8 +4,10 @@ Small quality-of-life tweaks for Obsidian's file explorer that make a deep, busy
 vault easier to navigate.
 
 <p align="center">
-  <img src="assets/demo.png" alt="Neat File Tree — sticky folder headers with a per-depth color scheme" width="380">
+  <img src="assets/demo.jpg" alt="Neat File Tree — sticky folder headers, shown across the six color schemes">
 </p>
+
+<p align="center"><sub>Sticky folder headers + the six built-in color schemes (Aurora, Rainbow, Ocean, Sunset, Forest, Mono)</sub></p>
 
 ## Features
 
