@@ -62,7 +62,33 @@ body.nft-accent-top .nav-folder-title:not([data-path*="/"]) .collapse-icon svg {
 }
 
 /* ===== 3. Accent indentation guides ===== */
+/* Tint the guides with the accent. The real variable is `--nav-indentation-guide-color`
+   (the bare `--indentation-guide-color` name is a no-op). */
 body.nft-accent-guides .workspace-leaf-content[data-type="file-explorer"] {
-  --indentation-guide-color: color-mix(in srgb, var(--text-accent) 30%, transparent);
-  --indentation-guide-color-active: color-mix(in srgb, var(--text-accent) 60%, transparent);
+  --nav-indentation-guide-color: color-mix(in srgb, var(--text-accent) 35%, transparent);
+  --nav-indentation-guide-color-active: color-mix(in srgb, var(--text-accent) 70%, transparent);
+}
+/* Show the guides ON the pinned bars too (Obsidian's native border-inline-start guide
+   is painted over by the bar's opaque background, so the line breaks at every pinned
+   header). Re-draw each guide as a pseudo elevated above the bars... */
+body.nft-sticky.nft-accent-guides .nav-folder-children {
+  position: relative;
+  /* ...but ISOLATE each children container so its guide pseudo is trapped in its own
+     stacking context. The container stacks below its OWN folder's pinned title (z 10),
+     so that title paints over its own child-guide → the line no longer strikes through
+     the bold title text. The pseudo still paints over DEEPER pinned bars (in their left
+     gutter) and the scrolling rows, so the line stays continuous everywhere else.
+     Without isolation the pseudo escapes to z 11 globally and cuts through the title. */
+  isolation: isolate;
+  border-inline-start-color: transparent;
+}
+body.nft-sticky.nft-accent-guides .nav-folder-children::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: -1px;
+  inline-size: 1px;
+  background: var(--nav-indentation-guide-color);
+  z-index: 11;
+  pointer-events: none;
 }
