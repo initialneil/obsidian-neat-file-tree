@@ -48,27 +48,48 @@ body.nft-sticky .nav-files-container .nav-folder-title.is-selected {
     var(--nav-item-background-active, var(--background-modifier-hover)));
 }
 
-/* ===== 2. Accent top-level folders ===== */
-body.nft-accent-top .nav-folder-title:not([data-path*="/"]) {
-  color: var(--text-accent);
-  font-weight: 700;
-  /* Set the base bg via the var so the hover/active rules above re-assert THIS
-     accent tint (not plain secondary) when a top-level folder is highlighted. */
-  --nft-base-bg: color-mix(in srgb, var(--text-accent) 8%, var(--background-secondary));
+/* ===== 2. Colorful folder bars (name + bar tint, by depth) ===== */
+/* The scheme colors each level on BOTH axes: the name in the level color, the bar tinted
+   with it. Both flow from a single per-depth var --nft-lvl (set by the chains below), fed
+   by the plugin's --nft-c0..--nft-c6 (each falling back to the theme accent). Scoped to
+   .nav-files-container so it ties + beats the sticky base bg rule (same specificity, later
+   in the file) — otherwise pinned bars would fall back to plain secondary. */
+body.nft-accent-top .nav-files-container .nav-folder-title {
+  color: var(--nft-lvl, var(--text-accent));
+  --nft-base-bg: color-mix(in srgb, var(--nft-lvl, var(--text-accent)) 8%, var(--background-secondary));
   background-color: var(--nft-base-bg);
 }
-body.nft-accent-top .nav-folder-title:not([data-path*="/"]) .collapse-icon svg {
-  color: var(--text-accent);
+/* Chevron follows the name color at every level. */
+body.nft-accent-top .nav-folder-title .collapse-icon svg {
+  color: currentColor;
+}
+/* Set --nft-lvl per depth: the chain length IS the depth, deepest match wins (same trick
+   as the sticky `top` rules). Depth 0 (slash-free data-path == a root item) also stays
+   BOLD. Beyond depth 6 the palette cycles (the c-var wraps in the plugin). */
+body.nft-accent-top .nav-folder-title:not([data-path*="/"]) { --nft-lvl: var(--nft-c0, var(--text-accent)); font-weight: 700; }
+body.nft-accent-top .nav-folder-children .nav-folder-title { --nft-lvl: var(--nft-c1, var(--text-accent)); }
+body.nft-accent-top .nav-folder-children .nav-folder-children .nav-folder-title { --nft-lvl: var(--nft-c2, var(--text-accent)); }
+body.nft-accent-top .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { --nft-lvl: var(--nft-c3, var(--text-accent)); }
+body.nft-accent-top .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { --nft-lvl: var(--nft-c4, var(--text-accent)); }
+body.nft-accent-top .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { --nft-lvl: var(--nft-c5, var(--text-accent)); }
+body.nft-accent-top .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { --nft-lvl: var(--nft-c6, var(--text-accent)); }
+/* Keep the top level BOLD through hover / active / selected. Obsidian's own
+   `.tree-item-self.is-active:hover` sets font-weight: var(--nav-item-weight-active),
+   which is usually unset → resolves to normal and un-bolds the bar. Re-assert 700 with
+   higher specificity (leaf-scoped) so it wins over core + folder-note plugin rules. */
+body.nft-accent-top .workspace-leaf-content[data-type="file-explorer"] .nav-folder-title:not([data-path*="/"]):is(:hover, .is-active, .has-focus, .is-selected, .fn-is-active, .mod-active) {
+  font-weight: 700;
 }
 
-/* ===== 3. Accent indentation guides ===== */
-/* Tint the guides with the accent. The real variable is `--nav-indentation-guide-color`
+/* ===== 3. Colored indentation guides (by depth) ===== */
+/* Sticky OFF: color Obsidian's native guide with the top-level color (single tint —
+   per-depth needs the pseudo below). Real var is `--nav-indentation-guide-color`
    (the bare `--indentation-guide-color` name is a no-op). */
 body.nft-accent-guides .workspace-leaf-content[data-type="file-explorer"] {
-  --nav-indentation-guide-color: color-mix(in srgb, var(--text-accent) 35%, transparent);
-  --nav-indentation-guide-color-active: color-mix(in srgb, var(--text-accent) 70%, transparent);
+  --nav-indentation-guide-color: color-mix(in srgb, var(--nft-c0, var(--text-accent)) 40%, transparent);
+  --nav-indentation-guide-color-active: color-mix(in srgb, var(--nft-c0, var(--text-accent)) 70%, transparent);
 }
-/* Show the guides ON the pinned bars too (Obsidian's native border-inline-start guide
+/* Sticky ON: show the guides ON the pinned bars too (the native border-inline-start guide
    is painted over by the bar's opaque background, so the line breaks at every pinned
    header). Re-draw each guide as a pseudo elevated above the bars... */
 body.nft-sticky.nft-accent-guides .nav-folder-children {
@@ -81,14 +102,22 @@ body.nft-sticky.nft-accent-guides .nav-folder-children {
      Without isolation the pseudo escapes to z 11 globally and cuts through the title. */
   isolation: isolate;
   border-inline-start-color: transparent;
+  /* --nft-guide = the color of the folder this spine descends from. Base is depth-0
+     (--nft-c0); each extra nesting level overrides to the next color, deepest wins. */
+  --nft-guide: var(--nft-c0, var(--text-accent));
 }
+body.nft-sticky.nft-accent-guides .nav-folder-children .nav-folder-children { --nft-guide: var(--nft-c1, var(--text-accent)); }
+body.nft-sticky.nft-accent-guides .nav-folder-children .nav-folder-children .nav-folder-children { --nft-guide: var(--nft-c2, var(--text-accent)); }
+body.nft-sticky.nft-accent-guides .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children { --nft-guide: var(--nft-c3, var(--text-accent)); }
+body.nft-sticky.nft-accent-guides .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children { --nft-guide: var(--nft-c4, var(--text-accent)); }
+body.nft-sticky.nft-accent-guides .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children { --nft-guide: var(--nft-c5, var(--text-accent)); }
 body.nft-sticky.nft-accent-guides .nav-folder-children::before {
   content: "";
   position: absolute;
   inset-block: 0;
   inset-inline-start: -1px;
   inline-size: 1px;
-  background: var(--nav-indentation-guide-color);
+  background: color-mix(in srgb, var(--nft-guide) 45%, transparent);
   z-index: 11;
   pointer-events: none;
 }
