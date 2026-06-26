@@ -7,6 +7,9 @@ body.nft-sticky .nav-files-container .nav-folder-title {
   top: 0;
   z-index: 10;
   background-color: var(--background-secondary);
+  /* 1px upward bleed in the same opaque color hides the sub-pixel seam between
+     stacked headers when --nft-row-h is a hair off the real row height. */
+  box-shadow: 0 -1px 0 var(--background-secondary);
 }
 body.nft-sticky .nav-folder-children .nav-folder-title { top: calc(1 * var(--nft-row-h, 25px)); z-index: 9; }
 body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(2 * var(--nft-row-h, 25px)); z-index: 8; }
@@ -17,14 +20,20 @@ body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .
 body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(7 * var(--nft-row-h, 25px)); z-index: 3; }
 body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(8 * var(--nft-row-h, 25px)); z-index: 2; }
 
-/* keep hover / active highlights visible despite the opaque sticky background */
+/* Keep hover / active highlights visible WITHOUT breaking opacity: the theme's
+   highlight vars are often translucent, so layer them as a background-image on
+   top of the opaque background-color base instead of replacing it. */
 body.nft-sticky .nav-files-container .nav-folder-title:hover {
-  background-color: var(--nav-item-background-hover, var(--background-modifier-hover));
+  background-image: linear-gradient(
+    var(--nav-item-background-hover, var(--background-modifier-hover)),
+    var(--nav-item-background-hover, var(--background-modifier-hover)));
 }
 body.nft-sticky .nav-files-container .nav-folder-title.has-focus,
 body.nft-sticky .nav-files-container .nav-folder-title.is-active,
 body.nft-sticky .nav-files-container .nav-folder-title.is-selected {
-  background-color: var(--nav-item-background-active, var(--background-modifier-hover));
+  background-image: linear-gradient(
+    var(--nav-item-background-active, var(--background-modifier-hover)),
+    var(--nav-item-background-active, var(--background-modifier-hover)));
 }
 
 /* ===== 2. Accent top-level folders ===== */
