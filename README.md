@@ -25,17 +25,8 @@ field to keep the sticky headers aligned if you use a larger interface font.
 
 ## Install
 
-### From Community Plugins (once approved)
-
-Settings → Community plugins → Browse → search "Neat File Tree" → Install →
-Enable.
-
-### Manual
-
-1. Download `main.js`, `manifest.json`, and `styles.css` from the latest
-   [release](../../releases).
-2. Copy them into `<your-vault>/.obsidian/plugins/neat-file-tree/`.
-3. Reload Obsidian and enable the plugin in Settings → Community plugins.
+In Obsidian: Settings → Community plugins → Browse → search "Neat File Tree" →
+Install → Enable.
 
 ## How it works
 
