@@ -3,17 +3,20 @@
 Small quality-of-life tweaks for Obsidian's file explorer that make a deep, busy
 vault easier to navigate.
 
-> Add a `demo.png` / `demo.gif` screenshot here before publishing.
+<p align="center">
+  <img src="assets/demo.png" alt="Neat File Tree — sticky folder headers with a per-depth color scheme" width="380">
+</p>
 
 ## Features
 
 - **Sticky folder headers** — parent folders pin to the top as you scroll,
   stacked by depth, just like VSCode's "sticky scroll". You never lose track of
   where you are when many folders are expanded.
-- **Accent top-level folders** — top-level folders are shown in your accent
-  color and bold so the roots of your vault stand out.
-- **Accent indentation guides** — the tree's indent guide lines are tinted to
-  match your accent color.
+- **Per-depth color schemes** — folder names, their bar, and the indentation
+  guide lines are colored by depth from a scheme you pick: **Aurora** (the
+  default, anchored to your theme's accent), **Rainbow**, **Ocean**, **Sunset**,
+  **Forest**, or **Mono** — chosen from a live preview in settings. Top-level
+  folders stay bold so the roots of your vault stand out.
 
 Each feature has its own toggle in the plugin settings, plus a **Row height**
 field to keep the sticky headers aligned if you use a larger interface font.
