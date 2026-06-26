@@ -1,7 +1,7 @@
 {
   "id": "neat-file-tree",
   "name": "Neat File Tree",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "minAppVersion": "1.4.0",
   "description": "VSCode-style sticky folder headers, accent-colored top-level folders, and tinted indentation guides for the file explorer.",
   "author": "Neil",
