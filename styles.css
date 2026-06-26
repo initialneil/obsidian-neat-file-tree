@@ -7,18 +7,20 @@ body.nft-sticky .nav-files-container .nav-folder-title {
   top: 0;
   z-index: 10;
   background-color: var(--background-secondary);
-  /* 1px upward bleed in the same opaque color hides the sub-pixel seam between
-     stacked headers when --nft-row-h is a hair off the real row height. */
-  box-shadow: 0 -1px 0 var(--background-secondary);
 }
-body.nft-sticky .nav-folder-children .nav-folder-title { top: calc(1 * var(--nft-row-h, 25px)); z-index: 9; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(2 * var(--nft-row-h, 25px)); z-index: 8; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(3 * var(--nft-row-h, 25px)); z-index: 7; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(4 * var(--nft-row-h, 25px)); z-index: 6; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(5 * var(--nft-row-h, 25px)); z-index: 5; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(6 * var(--nft-row-h, 25px)); z-index: 4; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(7 * var(--nft-row-h, 25px)); z-index: 3; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(8 * var(--nft-row-h, 25px)); z-index: 2; }
+/* Each deeper header sticks one row down, MINUS 1px, so it overlaps the header
+   above by ~1px instead of leaving a sub-pixel seam when --nft-row-h is a hair
+   off the real row height. The offset only affects the stuck position, so there
+   is no artifact in normal (unstuck) flow. The higher-z parent paints over the
+   1px overlap, so it is invisible. */
+body.nft-sticky .nav-folder-children .nav-folder-title { top: calc(1 * (var(--nft-row-h, 25px) - 1px)); z-index: 9; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(2 * (var(--nft-row-h, 25px) - 1px)); z-index: 8; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(3 * (var(--nft-row-h, 25px) - 1px)); z-index: 7; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(4 * (var(--nft-row-h, 25px) - 1px)); z-index: 6; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(5 * (var(--nft-row-h, 25px) - 1px)); z-index: 5; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(6 * (var(--nft-row-h, 25px) - 1px)); z-index: 4; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(7 * (var(--nft-row-h, 25px) - 1px)); z-index: 3; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(8 * (var(--nft-row-h, 25px) - 1px)); z-index: 2; }
 
 /* Keep hover / active highlights visible WITHOUT breaking opacity: the theme's
    highlight vars are often translucent, so layer them as a background-image on
