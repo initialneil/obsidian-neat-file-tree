@@ -4,28 +4,37 @@
 /* ===== 1. Sticky folder headers, stacked by depth (VSCode-style) ===== */
 body.nft-sticky .nav-files-container .nav-folder-title {
   position: sticky;
-  top: 0;
+  /* --nft-pad lifts the WHOLE stack up by the scroller's padding-top, so the
+     top-level header covers the strip above it (where scrolling rows would
+     otherwise show). Every depth subtracts the same --nft-pad, so the stack
+     stays internally aligned — lifting only the top bar would open a gap below
+     it. The offset only affects the stuck position, never normal flow. */
+  --nft-pad: 6px;
+  top: calc(-1 * var(--nft-pad));
   z-index: 10;
-  background-color: var(--background-secondary);
+  --nft-base-bg: var(--background-secondary);
+  background-color: var(--nft-base-bg);
 }
-/* Each deeper header sticks one row down, MINUS 1px, so it overlaps the header
-   above by ~1px instead of leaving a sub-pixel seam when --nft-row-h is a hair
-   off the real row height. The offset only affects the stuck position, so there
-   is no artifact in normal (unstuck) flow. The higher-z parent paints over the
-   1px overlap, so it is invisible. */
-body.nft-sticky .nav-folder-children .nav-folder-title { top: calc(1 * (var(--nft-row-h, 25px) - 1px)); z-index: 9; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(2 * (var(--nft-row-h, 25px) - 1px)); z-index: 8; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(3 * (var(--nft-row-h, 25px) - 1px)); z-index: 7; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(4 * (var(--nft-row-h, 25px) - 1px)); z-index: 6; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(5 * (var(--nft-row-h, 25px) - 1px)); z-index: 5; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(6 * (var(--nft-row-h, 25px) - 1px)); z-index: 4; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(7 * (var(--nft-row-h, 25px) - 1px)); z-index: 3; }
-body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(8 * (var(--nft-row-h, 25px) - 1px)); z-index: 2; }
+/* Each deeper header sticks one row down, MINUS 1px (so it overlaps the header
+   above by ~1px rather than leaving a sub-pixel seam when --nft-row-h is a hair
+   off the real row height), MINUS --nft-pad (the shared upward lift). The
+   higher-z parent paints over the 1px overlap, so it is invisible. */
+body.nft-sticky .nav-folder-children .nav-folder-title { top: calc(1 * (var(--nft-row-h, 25px) - 1px) - var(--nft-pad)); z-index: 9; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(2 * (var(--nft-row-h, 25px) - 1px) - var(--nft-pad)); z-index: 8; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(3 * (var(--nft-row-h, 25px) - 1px) - var(--nft-pad)); z-index: 7; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(4 * (var(--nft-row-h, 25px) - 1px) - var(--nft-pad)); z-index: 6; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(5 * (var(--nft-row-h, 25px) - 1px) - var(--nft-pad)); z-index: 5; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(6 * (var(--nft-row-h, 25px) - 1px) - var(--nft-pad)); z-index: 4; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(7 * (var(--nft-row-h, 25px) - 1px) - var(--nft-pad)); z-index: 3; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(8 * (var(--nft-row-h, 25px) - 1px) - var(--nft-pad)); z-index: 2; }
 
-/* Keep hover / active highlights visible WITHOUT breaking opacity: the theme's
-   highlight vars are often translucent, so layer them as a background-image on
-   top of the opaque background-color base instead of replacing it. */
+/* Keep hover / active highlights visible WITHOUT going transparent: Obsidian's
+   own :hover sets a TRANSLUCENT background-color, which on a pinned bar lets the
+   scrolling rows below bleed through. Re-assert the opaque base (--nft-base-bg,
+   which is the accent tint on top-level folders) and layer the translucent
+   highlight on top as a background-image gradient. */
 body.nft-sticky .nav-files-container .nav-folder-title:hover {
+  background-color: var(--nft-base-bg);
   background-image: linear-gradient(
     var(--nav-item-background-hover, var(--background-modifier-hover)),
     var(--nav-item-background-hover, var(--background-modifier-hover)));
@@ -33,6 +42,7 @@ body.nft-sticky .nav-files-container .nav-folder-title:hover {
 body.nft-sticky .nav-files-container .nav-folder-title.has-focus,
 body.nft-sticky .nav-files-container .nav-folder-title.is-active,
 body.nft-sticky .nav-files-container .nav-folder-title.is-selected {
+  background-color: var(--nft-base-bg);
   background-image: linear-gradient(
     var(--nav-item-background-active, var(--background-modifier-hover)),
     var(--nav-item-background-active, var(--background-modifier-hover)));
@@ -42,7 +52,10 @@ body.nft-sticky .nav-files-container .nav-folder-title.is-selected {
 body.nft-accent-top .nav-folder-title:not([data-path*="/"]) {
   color: var(--text-accent);
   font-weight: 700;
-  background-color: color-mix(in srgb, var(--text-accent) 8%, var(--background-secondary));
+  /* Set the base bg via the var so the hover/active rules above re-assert THIS
+     accent tint (not plain secondary) when a top-level folder is highlighted. */
+  --nft-base-bg: color-mix(in srgb, var(--text-accent) 8%, var(--background-secondary));
+  background-color: var(--nft-base-bg);
 }
 body.nft-accent-top .nav-folder-title:not([data-path*="/"]) .collapse-icon svg {
   color: var(--text-accent);
