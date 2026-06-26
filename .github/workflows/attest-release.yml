@@ -1,0 +1,44 @@
+name: Attest release assets
+
+# Adds GitHub artifact attestations (provenance) to the plugin's release assets,
+# so users — and the Obsidian community-store review — can cryptographically
+# verify main.js / manifest.json / styles.css were published from this repo.
+# Runs automatically when a release is published (publish.sh's `gh release create`
+# fires this), and can be run manually against an existing tag.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to attest (e.g. 1.0.5)
+        required: true
+
+permissions:
+  contents: read       # download the release assets
+  id-token: write      # OIDC token used to sign the attestation
+  attestations: write  # record the attestation in the repo's store
+
+jobs:
+  attest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve release tag
+        id: t
+        run: echo "tag=${{ github.event.release.tag_name || inputs.tag }}" >> "$GITHUB_OUTPUT"
+
+      - name: Download the published assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          gh release download "${{ steps.t.outputs.tag }}" --repo "$GITHUB_REPOSITORY" \
+            --pattern main.js --pattern manifest.json --pattern styles.css --dir dist
+
+      # Attest the exact published bytes (download-then-attest), so the subject
+      # digests always match what users actually download.
+      - name: Attest release assets
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*
