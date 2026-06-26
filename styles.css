@@ -1,0 +1,44 @@
+/* Neat File Tree — styles are gated on body classes toggled by the plugin.
+   --nft-row-h is set inline on <body> from settings (fallback 25px). */
+
+/* ===== 1. Sticky folder headers, stacked by depth (VSCode-style) ===== */
+body.nft-sticky .nav-files-container .nav-folder-title {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--background-secondary);
+}
+body.nft-sticky .nav-folder-children .nav-folder-title { top: calc(1 * var(--nft-row-h, 25px)); z-index: 9; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(2 * var(--nft-row-h, 25px)); z-index: 8; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(3 * var(--nft-row-h, 25px)); z-index: 7; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(4 * var(--nft-row-h, 25px)); z-index: 6; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(5 * var(--nft-row-h, 25px)); z-index: 5; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(6 * var(--nft-row-h, 25px)); z-index: 4; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(7 * var(--nft-row-h, 25px)); z-index: 3; }
+body.nft-sticky .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-children .nav-folder-title { top: calc(8 * var(--nft-row-h, 25px)); z-index: 2; }
+
+/* keep hover / active highlights visible despite the opaque sticky background */
+body.nft-sticky .nav-files-container .nav-folder-title:hover {
+  background-color: var(--nav-item-background-hover, var(--background-modifier-hover));
+}
+body.nft-sticky .nav-files-container .nav-folder-title.has-focus,
+body.nft-sticky .nav-files-container .nav-folder-title.is-active,
+body.nft-sticky .nav-files-container .nav-folder-title.is-selected {
+  background-color: var(--nav-item-background-active, var(--background-modifier-hover));
+}
+
+/* ===== 2. Accent top-level folders ===== */
+body.nft-accent-top .nav-folder-title:not([data-path*="/"]) {
+  color: var(--text-accent);
+  font-weight: 700;
+  background-color: color-mix(in srgb, var(--text-accent) 8%, var(--background-secondary));
+}
+body.nft-accent-top .nav-folder-title:not([data-path*="/"]) .collapse-icon svg {
+  color: var(--text-accent);
+}
+
+/* ===== 3. Accent indentation guides ===== */
+body.nft-accent-guides .workspace-leaf-content[data-type="file-explorer"] {
+  --indentation-guide-color: color-mix(in srgb, var(--text-accent) 30%, transparent);
+  --indentation-guide-color-active: color-mix(in srgb, var(--text-accent) 60%, transparent);
+}
