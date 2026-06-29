@@ -29,6 +29,29 @@ class NeatFileTreePlugin extends Plugin {
     this.settings = Object.assign({}, DEFAULTS, await this.loadData());
     this.addSettingTab(new NeatFileTreeSettingTab(this.app, this));
     this.apply();
+    // Click a pinned sticky header -> scroll its real row into view instead of
+    // toggling collapse. window + capture so we run before Obsidian's title
+    // handler AND other plugins' capture handlers (e.g. Folder Note, which
+    // stopImmediatePropagation's clicks on folder-note folders).
+    this.registerDomEvent(window, 'click', this.onStickyClick.bind(this), true);
+  }
+
+  // A sticky folder title that's scrolled past floats away from its tree-item's
+  // top edge (delta > 0 = pinned, at any depth). Clicking it then reveals the
+  // folder's real position (children below it) instead of folding it; scrolling
+  // up by exactly delta lands it at the bottom of its remaining ancestor stack.
+  onStickyClick(e) {
+    if (!this.settings.sticky) return;
+    const title = e.target.closest && e.target.closest('.nav-folder-title');
+    if (!title) return;
+    const item = title.closest('.tree-item');
+    const scroller = title.closest('.nav-files-container');
+    if (!item || !scroller) return;
+    const delta = title.getBoundingClientRect().top - item.getBoundingClientRect().top;
+    if (delta <= 1) return; // not pinned — let the normal click (fold / folder-note) happen
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    scroller.scrollBy({ top: -delta, behavior: 'smooth' });
   }
 
   onunload() {
