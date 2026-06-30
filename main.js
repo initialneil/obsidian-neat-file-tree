@@ -20,6 +20,7 @@ const DEFAULTS = {
   sticky: true,
   accentTop: true,
   accentGuides: true,
+  scrollToActive: true,
   scheme: 'aurora',
   rowHeight: 25,
 };
@@ -34,6 +35,111 @@ class NeatFileTreePlugin extends Plugin {
     // handler AND other plugins' capture handlers (e.g. Folder Note, which
     // stopImmediatePropagation's clicks on folder-note folders).
     this.registerDomEvent(window, 'click', this.onStickyClick.bind(this), true);
+    // Opening / switching to a file -> scroll the tree to reveal it.
+    this.registerEvent(this.app.workspace.on('file-open', this.onActiveFile.bind(this)));
+    // Note when a tree row that opens a file is pressed — a file row, or a folder
+    // bar that IS a folder note — so the resulting file-open doesn't auto-scroll a
+    // target that's already right where the user clicked. mousedown + capture fires
+    // before any open; a timestamp (not a path) so it also covers folder notes,
+    // whose folder data-path differs from the backing file's path. 1s window so a
+    // slow click (button held) still counts.
+    this._treePressAt = 0;
+    this.registerDomEvent(window, 'mousedown', (e) => {
+      if (e.target.closest && e.target.closest(
+        '.nav-files-container .nav-file-title, .nav-files-container .nav-folder-title.has-folder-note')) {
+        this._treePressAt = Date.now();
+      }
+    }, true);
+  }
+
+  // Opening / switching to a file -> reveal it in the file tree, then re-seat it
+  // just below its pinned ancestor stack (root on top, each level down, then the
+  // file). The explorer is VIRTUALIZED (off-screen rows are unmounted), so we let
+  // Obsidian's own reveal do the hard part — expand the file's parents and scroll
+  // its row into view — then nudge for the sticky headers it doesn't know about.
+  onActiveFile(file) {
+    if (!this.settings.scrollToActive || !file) return;
+    // Opened from a click in the tree -> already in view; flash it but don't scroll
+    // (a tree click means the user is already looking right at it).
+    const fromTreePress = Date.now() - this._treePressAt < 1000;
+    if (!fromTreePress) {
+      const leaf = this.app.workspace.getLeavesOfType('file-explorer')[0];
+      // revealInFolder expands the file's parents and scrolls its row into view,
+      // SYNCHRONOUSLY rendering it (unlike the reveal-active-file command, which
+      // depends on the explorer's active-file having updated). Doesn't steal focus.
+      if (leaf && leaf.view && leaf.view.revealInFolder) leaf.view.revealInFolder(file);
+    }
+    // Seat (only on a real reveal) + flash, on the NEXT frame: the virtualized row
+    // renders asynchronously after a reveal, and (for folder notes) the Folder Note
+    // plugin needs a tick to hide the backing-file row + mark the folder fn-is-active.
+    requestAnimationFrame(() => this.actOnTarget(file.path, !fromTreePress, 8));
+  }
+
+  actOnTarget(path, doSeat, tries) {
+    const el = this.resolveTarget(path);
+    if (!el) {
+      if (tries > 1) requestAnimationFrame(() => this.actOnTarget(path, doSeat, tries - 1));
+      return;
+    }
+    // Seat file rows AND folder-note bars: a folder bar is itself sticky, so without
+    // seating it lands at the very top, hidden under its own pinned ancestors.
+    if (doSeat) this.seatBelowStack(el);
+    this.flashAttention(el);
+  }
+
+  // The VISIBLE tree element representing the active file: its file row, or — when
+  // that row is hidden/absent because the file is a folder note — the folder bar
+  // (the Folder Note plugin marks the open note's folder with .fn-is-active).
+  resolveTarget(path) {
+    const explorer = document.querySelector('.workspace-leaf-content[data-type="file-explorer"]');
+    if (!explorer) return null;
+    const fileRow = [...explorer.querySelectorAll('.nav-file-title')].find((el) => el.dataset.path === path);
+    if (fileRow && fileRow.offsetParent !== null) return fileRow; // visible file row
+    return explorer.querySelector('.nav-folder-title.fn-is-active') || null; // folder note
+  }
+
+  // Seat a row (file row OR folder-note bar) right below its pinned ancestor stack.
+  // We set scrollTop directly from the row's SCROLL-INVARIANT content position rather
+  // than nudging relative to the measured bars — the virtual list re-renders
+  // asynchronously after a reveal, so measured bar positions are transient and racing
+  // them is non-deterministic.
+  seatBelowStack(titleEl) {
+    const scroller = titleEl.closest('.nav-files-container');
+    if (!scroller) return;
+    const path = titleEl.dataset.path || '';
+    const padTop = parseFloat(getComputedStyle(scroller).paddingTop) || 0;
+    const contentTop = scroller.getBoundingClientRect().top + scroller.clientTop + padTop;
+    // Measure the TREE-ITEM, not the title: a folder title is position:sticky, so once
+    // pinned its own rect reads the stuck position, not its real place in the content.
+    // The tree-item stays in normal flow, so its top is the true content position.
+    const item = titleEl.closest('.tree-item') || titleEl;
+    const rowInContent = item.getBoundingClientRect().top - contentTop + scroller.scrollTop;
+    // Height of the pinned ancestor stack = bottom edge of the deepest pinned bar.
+    // depth = ancestor folders = slashes in the path; each bar steps (rowH-1) and
+    // the whole stack lifts by --nft-pad, so deepest bar bottom = (d-1)*(rowH-1) -
+    // pad + rowH. 0 when sticky is off or the file is at the root.
+    let offset = 0;
+    if (this.settings.sticky) {
+      const d = (path.match(/\//g) || []).length;
+      if (d > 0) {
+        const anyTitle = scroller.querySelector('.nav-folder-title');
+        const pad = (anyTitle && parseFloat(getComputedStyle(anyTitle).getPropertyValue('--nft-pad'))) || 6;
+        const rowH = this.settings.rowHeight;
+        offset = (d - 1) * (rowH - 1) - pad + rowH;
+      }
+    }
+    scroller.scrollTop = Math.max(0, rowInContent - offset);
+  }
+
+  // Brief accent pulse to draw the eye to a target the tree just scrolled to.
+  // Used for both the revealed file (above) and the clicked folder bar (below).
+  flashAttention(el) {
+    if (!el) return;
+    el.classList.remove('nft-attention');
+    void el.offsetWidth; // restart the animation if it's already playing
+    el.classList.add('nft-attention');
+    const done = () => { el.classList.remove('nft-attention'); el.removeEventListener('animationend', done); };
+    el.addEventListener('animationend', done);
   }
 
   // A sticky folder title that's scrolled past floats away from its tree-item's
@@ -52,6 +158,7 @@ class NeatFileTreePlugin extends Plugin {
     e.preventDefault();
     e.stopImmediatePropagation();
     scroller.scrollBy({ top: -delta, behavior: 'smooth' });
+    this.flashAttention(title);
   }
 
   onunload() {
@@ -94,6 +201,16 @@ class NeatFileTreeSettingTab extends PluginSettingTab {
       .addToggle((t) =>
         t.setValue(this.plugin.settings.sticky).onChange(async (v) => {
           this.plugin.settings.sticky = v;
+          await this.plugin.save();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName('Scroll to active file')
+      .setDesc('When you open, switch to, or jump to a file, reveal it in the file tree — expanding its parent folders and scrolling so they stack as sticky headers above (root first), the file just below.')
+      .addToggle((t) =>
+        t.setValue(this.plugin.settings.scrollToActive).onChange(async (v) => {
+          this.plugin.settings.scrollToActive = v;
           await this.plugin.save();
         })
       );
