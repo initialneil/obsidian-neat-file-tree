@@ -20,6 +20,22 @@ vault easier to navigate.
   **Forest**, or **Mono** — chosen from a live preview in settings. Top-level
   folders stay bold so the roots of your vault stand out.
 
+- **Reveal on open** — opening or switching to a file scrolls the tree to it and
+  seats it just below its sticky ancestor stack, with a brief accent pulse.
+  Clicking a pinned sticky header jumps to that folder's real row.
+- **`nft:` links** — link to a path from inside a note to reveal it in the file
+  tree **without navigating**:
+
+  ```markdown
+  [My projects](nft:Work/Projects)
+  [A note](nft:Work/Projects/Roadmap.md)
+  ```
+
+  Clicking scrolls and pulses that file or folder in the tree; the note you're
+  reading stays put. Percent-encode spaces (`Work%20Notes`) or wrap the target
+  in angle brackets (`[x](<nft:Work Notes>)`). Works in Reading view and Live
+  Preview.
+
 Each feature has its own toggle in the plugin settings, plus a **Row height**
 field to keep the sticky headers aligned if you use a larger interface font.
 
@@ -30,8 +46,9 @@ Install → Enable.
 
 ## How it works
 
-The plugin is pure CSS toggled by body classes — no DOM manipulation, no
-performance cost. It respects your theme's accent color (`--text-accent`) and
+The look is CSS toggled by body classes — no DOM manipulation, no performance
+cost. The scroll behaviors are a thin layer of plain JS on top. It respects your
+theme's accent color (`--text-accent`) and
 background variables, so it adapts to light/dark and custom themes
 automatically.
 

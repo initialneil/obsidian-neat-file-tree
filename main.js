@@ -35,6 +35,12 @@ class NeatFileTreePlugin extends Plugin {
     // handler AND other plugins' capture handlers (e.g. Folder Note, which
     // stopImmediatePropagation's clicks on folder-note folders).
     this.registerDomEvent(window, 'click', this.onStickyClick.bind(this), true);
+    // A `[label](nft:some/path)` link in a note -> reveal that path in the tree,
+    // WITHOUT navigating away from the note. A non-http scheme renders as a plain
+    // anchor in both Reading view and Live Preview, so a single capture listener on
+    // window covers every renderer (reading, live preview, hover popover, canvas)
+    // with no markdown post-processor or CodeMirror extension.
+    this.registerDomEvent(window, 'click', this.onNftLink.bind(this), true);
     // Opening / switching to a file -> scroll the tree to reveal it.
     this.registerEvent(this.app.workspace.on('file-open', this.onActiveFile.bind(this)));
     // Note when a tree row that opens a file is pressed — a file row, or a folder
@@ -81,6 +87,16 @@ class NeatFileTreePlugin extends Plugin {
     requestAnimationFrame(() => this.actOnTarget(file.path, !fromTreePress, 8));
   }
 
+  // Reveal an arbitrary path (file OR folder) in the tree without opening it —
+  // the file-open flow above, minus the file-open. Drives the nft: link handler.
+  revealPath(path) {
+    const target = this.app.vault.getAbstractFileByPath(path);
+    if (!target) return;
+    const leaf = this.app.workspace.getLeavesOfType('file-explorer')[0];
+    if (leaf && leaf.view && leaf.view.revealInFolder) leaf.view.revealInFolder(target);
+    requestAnimationFrame(() => this.actOnTarget(path, true, 8));
+  }
+
   actOnTarget(path, doSeat, tries) {
     const el = this.resolveTarget(path);
     if (!el) {
@@ -99,8 +115,11 @@ class NeatFileTreePlugin extends Plugin {
   resolveTarget(path) {
     const explorer = document.querySelector('.workspace-leaf-content[data-type="file-explorer"]');
     if (!explorer) return null;
-    const fileRow = [...explorer.querySelectorAll('.nav-file-title')].find((el) => el.dataset.path === path);
-    if (fileRow && fileRow.offsetParent !== null) return fileRow; // visible file row
+    // File rows AND folder titles: an nft: link can point at either, and a folder's
+    // own title is the row to seat/flash for it.
+    const row = [...explorer.querySelectorAll('.nav-file-title, .nav-folder-title')]
+      .find((el) => el.dataset.path === path);
+    if (row && row.offsetParent !== null) return row; // visible row
     return explorer.querySelector('.nav-folder-title.fn-is-active') || null; // folder note
   }
 
@@ -165,6 +184,38 @@ class NeatFileTreePlugin extends Plugin {
     e.stopImmediatePropagation();
     scroller.scrollBy({ top: -delta, behavior: 'smooth' });
     this.flashAttention(title);
+  }
+
+  // Reading view renders `[x](nft:path)` as a real <a>; Live Preview renders it as a
+  // span with the URL kept in the CodeMirror doc, NOT the DOM — so each mode needs its
+  // own way to recover the target.
+  onNftLink(e) {
+    if (!e.target.closest) return;
+    const a = e.target.closest('a[href^="nft:"]');
+    if (a) return this.followNft(e, a.getAttribute('href'));
+    const span = e.target.closest('span.cm-link');
+    if (!span) return;
+    // Find the editor by DOM containment rather than trusting the active leaf: this is
+    // a capture-phase handler, so focus hasn't necessarily moved to the clicked note.
+    const leaf = this.app.workspace.getLeavesOfType('markdown')
+      .find((l) => l.view.contentEl && l.view.contentEl.contains(span));
+    const cm = leaf && leaf.view.editor && leaf.view.editor.cm;
+    if (!cm || !cm.posAtDOM) return;
+    const pos = cm.posAtDOM(span);
+    const line = cm.state.doc.lineAt(pos);
+    const off = pos - line.from;
+    // A line can hold several links, so take the one whose source range covers the
+    // clicked position. `<...>` is markdown's escape for a target with spaces.
+    for (const m of line.text.matchAll(/\[[^\]]*\]\(<?(nft:[^)>]*)>?\)/g)) {
+      if (off >= m.index && off <= m.index + m[0].length) return this.followNft(e, m[1]);
+    }
+  }
+
+  // preventDefault is what keeps the note put: no navigation, no external-link handoff.
+  followNft(e, href) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.revealPath(decodeURIComponent(href.slice(4).replace(/^\/+/, ''))); // tolerate nft://
   }
 
   onunload() {
