@@ -91,11 +91,24 @@ class NeatFileTreePlugin extends Plugin {
   // Reveal an arbitrary path (file OR folder) in the tree without opening it —
   // the file-open flow above, minus the file-open. Drives the nft: link handler.
   revealPath(path) {
-    const target = this.app.vault.getAbstractFileByPath(path);
+    const target = this.nftTarget(path);
     if (!target) return;
     const leaf = this.app.workspace.getLeavesOfType('file-explorer')[0];
     if (leaf && leaf.view && leaf.view.revealInFolder) leaf.view.revealInFolder(target);
-    requestAnimationFrame(() => this.actOnTarget(path, true, 8));
+    // Seat/flash the row we actually revealed — for a folder note that's the folder,
+    // whose data-path differs from the linked file's.
+    requestAnimationFrame(() => this.actOnTarget(target.path, true, 8));
+  }
+
+  // What a path should actually resolve to in the tree. A folder note (`X/X.md`) has no
+  // visible row of its own — the Folder Note plugin hides it and shows the FOLDER — so
+  // link it to the folder. That also stops the reveal from expanding the folder, the same
+  // guard `onActiveFile` applies on a tab switch.
+  nftTarget(path) {
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (!file) return null;
+    if (file.parent && file.basename && file.parent.name === file.basename) return file.parent;
+    return file;
   }
 
   actOnTarget(path, doSeat, tries) {
@@ -244,6 +257,8 @@ class NeatFileTreePlugin extends Plugin {
     el.classList.add('nft-link');
     let path;
     try { path = decodeURIComponent(href.slice(4).replace(/^\/+/, '')); } catch (_) { path = href; }
+    const target = this.nftTarget(path); // folder note -> its folder, so the colour
+    if (target) path = target.path;      // matches the row the link actually reveals
     const depth = (path.match(/\//g) || []).length;
     el.style.setProperty('--nft-link-c', 'var(--nft-c' + (depth % LEVELS) + ')');
   }
