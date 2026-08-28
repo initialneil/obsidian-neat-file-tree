@@ -15,8 +15,8 @@ vault easier to navigate.
   stacked by depth, just like VSCode's "sticky scroll". You never lose track of
   where you are when many folders are expanded.
 - **Per-depth color schemes** — folder names, their bar, and the indentation
-  guide lines are colored by depth from a scheme you pick: **Aurora** (the
-  default, anchored to your theme's accent), **Rainbow**, **Ocean**, **Sunset**,
+  guide lines are colored by depth from a scheme you pick: **Rainbow** (the
+  default), **Aurora** (anchored to your theme's accent), **Ocean**, **Sunset**,
   **Forest**, or **Mono** — chosen from a live preview in settings. Top-level
   folders stay bold so the roots of your vault stand out.
 

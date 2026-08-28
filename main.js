@@ -8,8 +8,8 @@ const LEVELS = 7;
 // Each scheme: colors[i] is any CSS color for depth i (arrays shorter than LEVELS
 // cycle). `var(--text-accent)` anchors a level to the theme's live accent color.
 const SCHEMES = {
-  aurora:  { name: 'Aurora (default)', colors: ['var(--text-accent)', '#8a7bf0', '#6a8bef', '#4f9fe6', '#33b1c9', '#2bbf9e'] },
-  rainbow: { name: 'Rainbow',          colors: ['#8b5cf6', '#3b82f6', '#06b6d4', '#22c55e', '#eab308', '#f97316', '#ef4444'] },
+  aurora:  { name: 'Aurora',          colors: ['var(--text-accent)', '#8a7bf0', '#6a8bef', '#4f9fe6', '#33b1c9', '#2bbf9e'] },
+  rainbow: { name: 'Rainbow (default)', colors: ['#8b5cf6', '#3b82f6', '#06b6d4', '#22c55e', '#eab308', '#f97316', '#ef4444'] },
   ocean:   { name: 'Ocean',            colors: ['#0ea5e9', '#2563eb', '#0891b2', '#14b8a6', '#3b82f6', '#0d9488'] },
   sunset:  { name: 'Sunset',           colors: ['#f43f5e', '#fb7185', '#f97316', '#f59e0b', '#eab308', '#ec4899'] },
   forest:  { name: 'Forest',           colors: ['#15803d', '#22c55e', '#65a30d', '#0d9488', '#84cc16', '#16a34a'] },
@@ -21,7 +21,7 @@ const DEFAULTS = {
   accentTop: true,
   accentGuides: true,
   scrollToActive: true,
-  scheme: 'aurora',
+  scheme: 'rainbow',
   rowHeight: 25,
 };
 
@@ -179,7 +179,7 @@ class NeatFileTreePlugin extends Plugin {
     b.classList.toggle('nft-accent-top', this.settings.accentTop);
     b.classList.toggle('nft-accent-guides', this.settings.accentGuides);
     b.style.setProperty('--nft-row-h', this.settings.rowHeight + 'px');
-    const scheme = SCHEMES[this.settings.scheme] || SCHEMES.aurora;
+    const scheme = SCHEMES[this.settings.scheme] || SCHEMES.rainbow;
     for (let i = 0; i < LEVELS; i++) {
       b.style.setProperty('--nft-c' + i, scheme.colors[i % scheme.colors.length]);
     }
