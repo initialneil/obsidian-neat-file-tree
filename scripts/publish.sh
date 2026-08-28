@@ -25,7 +25,10 @@ echo "releasing $CUR -> $NEXT  (minAppVersion $MINAPP)"
 
 # perl -0pi (not sed -i): uniform on macOS + Linux
 perl -0pi -e "s/(\"version\"\\s*:\\s*\")[0-9.]+(\")/\${1}$NEXT\${2}/" manifest.json
-grep -q "\"$NEXT\"" versions.json || perl -0pi -e "s/\\n\\}/,\\n  \"$NEXT\": \"$MINAPP\"\\n}/" versions.json
+# Match the KEY, not just the string: the version also appears as a minAppVersion VALUE
+# on every line, so a bare grep for "$NEXT" silently skips the insert whenever the new
+# version equals minAppVersion (this shipped 1.4.0 without its versions.json entry).
+grep -q "\"$NEXT\"[[:space:]]*:" versions.json || perl -0pi -e "s/\\n\\}/,\\n  \"$NEXT\": \"$MINAPP\"\\n}/" versions.json
 
 # refresh the local vault install (gitignored, machine-specific) — best effort
 if [ -x ./dev-sync.sh ]; then ./dev-sync.sh || echo "  ! dev-sync failed (Obsidian closed?) — continuing"; fi
