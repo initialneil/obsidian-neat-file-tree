@@ -255,8 +255,7 @@ class NeatFileTreePlugin extends Plugin {
   // palette cycles past LEVELS, exactly as the tree's own depth colouring does.
   markNftLink(el, href) {
     el.classList.add('nft-link');
-    let path;
-    try { path = decodeURIComponent(href.slice(4).replace(/^\/+/, '')); } catch (_) { path = href; }
+    let path = this.nftPath(href);
     const target = this.nftTarget(path); // folder note -> its folder, so the colour
     if (target) path = target.path;      // matches the row the link actually reveals
     const depth = (path.match(/\//g) || []).length;
@@ -284,7 +283,15 @@ class NeatFileTreePlugin extends Plugin {
   followNft(e, href) {
     e.preventDefault();
     e.stopPropagation();
-    this.revealPath(decodeURIComponent(href.slice(4).replace(/^\/+/, ''))); // tolerate nft://
+    this.revealPath(this.nftPath(href));
+  }
+
+  // `nft:` -> a vault path. Links written by hand are usually percent-encoded, but a
+  // Bases `html()` formula emits file.path raw — and a raw `%` in a filename makes
+  // decodeURIComponent throw, so fall back to the literal text.
+  nftPath(href) {
+    const raw = href.slice(4).replace(/^\/+/, ''); // tolerate nft://
+    try { return decodeURIComponent(raw); } catch (_) { return raw; }
   }
 
   onunload() {
