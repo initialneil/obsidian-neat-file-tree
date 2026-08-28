@@ -32,9 +32,11 @@ vault easier to navigate.
   ```
 
   Clicking scrolls and pulses that file or folder in the tree; the note you're
-  reading stays put. Percent-encode spaces (`Work%20Notes`) or wrap the target
-  in angle brackets (`[x](<nft:Work Notes>)`). Works in Reading view and Live
-  Preview.
+  reading stays put. The link is drawn in your colour scheme's colour for the
+  **depth it points at**, so it matches the row it reveals, with a dotted
+  underline and a ▸ marker to set it apart from a normal link. Percent-encode
+  spaces (`Work%20Notes`) or wrap the target in angle brackets
+  (`[x](<nft:Work Notes>)`). Works in Reading view and Live Preview.
 
 Each feature has its own toggle in the plugin settings, plus a **Row height**
 field to keep the sticky headers aligned if you use a larger interface font.

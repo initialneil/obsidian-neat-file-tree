@@ -137,9 +137,10 @@ body.nft-sticky.nft-accent-guides .nav-folder-children::before {
 /* ===== 5. nft: links ===== */
 /* `[label](nft:some/path)` reveals a path in the file tree instead of navigating, so it
    must not read as a normal link — a reader should be able to tell at a glance that
-   clicking it won't take them anywhere. Quiet text colour (not the vivid link colour), a
-   dotted underline (dotted = acts in place, solid = takes you away), a leading ▸ marker,
-   and no external-link arrow. Hover brings in the accent so it still feels clickable.
+   clicking it won't take them anywhere. It carries the colour scheme's colour for the
+   DEPTH it points at (set as --nft-link-c by markNftLink), so a link reads in the same
+   colour as the row it reveals; plus a dotted underline (dotted = acts in place, solid =
+   takes you away), a leading ▸ marker, and no external-link arrow.
    Reading view exposes the href; Live Preview keeps the URL out of the DOM entirely, so
    the plugin tags those spans .nft-link (see tagNftSpans in main.js). */
 /* !important because themes colour `.cm-link` / `.external-link` with selectors more
@@ -147,7 +148,7 @@ body.nft-sticky.nft-accent-guides .nav-folder-children::before {
 a[href^="nft:"],
 .cm-link.nft-link,
 .cm-link.nft-link .cm-underline {
-  color: var(--text-muted) !important;
+  color: var(--nft-link-c, var(--nft-c0, var(--text-accent))) !important;
   text-decoration: underline dotted !important;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
@@ -156,7 +157,6 @@ a[href^="nft:"]::before,
 .cm-link.nft-link::before {
   content: "\25B8"; /* ▸ — the file tree's own disclosure marker */
   margin-inline-end: 0.3em;
-  color: var(--nft-c0, var(--text-accent));
   text-decoration: none;
   font-size: 0.9em;
 }

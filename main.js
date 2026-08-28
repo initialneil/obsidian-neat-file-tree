@@ -228,8 +228,24 @@ class NeatFileTreePlugin extends Plugin {
     // `span.cm-link` is the label; `span.cm-url` is the collapsed `](url)` widget that
     // carries Obsidian's external-link arrow — tag both so the arrow can be hidden.
     for (const span of root.querySelectorAll('span.cm-link:not(.nft-link), span.cm-url:not(.nft-link)')) {
-      if (this.nftHrefForSpan(span)) span.classList.add('nft-link');
+      const href = this.nftHrefForSpan(span);
+      if (href) this.markNftLink(span, href);
     }
+    // Reading view exposes the href directly, but still needs the depth colour set.
+    for (const a of root.querySelectorAll('a[href^="nft:"]:not(.nft-link)')) {
+      this.markNftLink(a, a.getAttribute('href'));
+    }
+  }
+
+  // Colour the link with the scheme colour of the depth it points at, so a link to a
+  // depth-2 folder reads in the same colour as that folder's row in the tree. The
+  // palette cycles past LEVELS, exactly as the tree's own depth colouring does.
+  markNftLink(el, href) {
+    el.classList.add('nft-link');
+    let path;
+    try { path = decodeURIComponent(href.slice(4).replace(/^\/+/, '')); } catch (_) { path = href; }
+    const depth = (path.match(/\//g) || []).length;
+    el.style.setProperty('--nft-link-c', 'var(--nft-c' + (depth % LEVELS) + ')');
   }
 
   // One observer on the whole workspace, not per editor: CodeMirror swaps its
@@ -257,7 +273,10 @@ class NeatFileTreePlugin extends Plugin {
   }
 
   onunload() {
-    for (const el of document.querySelectorAll('.nft-link')) el.classList.remove('nft-link');
+    for (const el of document.querySelectorAll('.nft-link')) {
+      el.classList.remove('nft-link');
+      el.style.removeProperty('--nft-link-c');
+    }
     document.body.classList.remove('nft-sticky', 'nft-accent-top', 'nft-accent-guides');
     document.body.style.removeProperty('--nft-row-h');
     for (let i = 0; i < LEVELS; i++) document.body.style.removeProperty('--nft-c' + i);
