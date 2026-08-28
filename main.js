@@ -67,7 +67,13 @@ class NeatFileTreePlugin extends Plugin {
       // revealInFolder expands the file's parents and scrolls its row into view,
       // SYNCHRONOUSLY rendering it (unlike the reveal-active-file command, which
       // depends on the explorer's active-file having updated). Doesn't steal focus.
-      if (leaf && leaf.view && leaf.view.revealInFolder) leaf.view.revealInFolder(file);
+      // For a folder note (X/X.md), reveal the FOLDER, not the backing file: the file's
+      // parent IS its own folder, so revealing it would expand (unfold) that folder —
+      // unwanted when just switching tabs. The visible target is the folder bar anyway;
+      // revealing the folder scrolls it in without touching its collapsed state
+      // (resolveTarget still seats/flashes the .fn-is-active bar a frame later).
+      const target = (file.parent && file.parent.name === file.basename) ? file.parent : file;
+      if (leaf && leaf.view && leaf.view.revealInFolder) leaf.view.revealInFolder(target);
     }
     // Seat (only on a real reveal) + flash, on the NEXT frame: the virtualized row
     // renders asynchronously after a reveal, and (for folder notes) the Folder Note
