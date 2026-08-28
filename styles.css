@@ -133,3 +133,47 @@ body.nft-sticky.nft-accent-guides .nav-folder-children::before {
   100%    { box-shadow: inset 0 0 0 9999px hsla(var(--interactive-accent-hsl), 0); }    /* then fade */
 }
 .nav-files-container .nft-attention { animation: nft-attention 1.5s ease-out; }
+
+/* ===== 5. nft: links ===== */
+/* `[label](nft:some/path)` reveals a path in the file tree instead of navigating, so it
+   must not read as a normal link — a reader should be able to tell at a glance that
+   clicking it won't take them anywhere. Quiet text colour (not the vivid link colour), a
+   dotted underline (dotted = acts in place, solid = takes you away), a leading ▸ marker,
+   and no external-link arrow. Hover brings in the accent so it still feels clickable.
+   Reading view exposes the href; Live Preview keeps the URL out of the DOM entirely, so
+   the plugin tags those spans .nft-link (see tagNftSpans in main.js). */
+/* !important because themes colour `.cm-link` / `.external-link` with selectors more
+   specific than anything scoped here, and the whole point is to NOT look like a link. */
+a[href^="nft:"],
+.cm-link.nft-link,
+.cm-link.nft-link .cm-underline {
+  color: var(--text-muted) !important;
+  text-decoration: underline dotted !important;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+a[href^="nft:"]::before,
+.cm-link.nft-link::before {
+  content: "\25B8"; /* ▸ — the file tree's own disclosure marker */
+  margin-inline-end: 0.3em;
+  color: var(--nft-c0, var(--text-accent));
+  text-decoration: none;
+  font-size: 0.9em;
+}
+a[href^="nft:"]:hover,
+.cm-link.nft-link:hover,
+.cm-link.nft-link:hover .cm-underline {
+  color: var(--text-accent) !important;
+  text-decoration-style: solid !important;
+}
+/* Kill the external-link arrow: a background icon on the anchor in Reading view, and a
+   separate collapsed `](url)` widget span in Live Preview. */
+a[href^="nft:"] {
+  background-image: none !important;
+  padding-inline-end: 0 !important;
+}
+a[href^="nft:"]::after { content: none !important; }
+/* :empty matters — that selects only the COLLAPSED `](url)` widget (which is where the
+   arrow is painted). With the cursor on the line CodeMirror reveals the real URL text in
+   non-empty .cm-url spans, and those must stay visible or the link becomes uneditable. */
+.cm-url.nft-link:empty { display: none !important; }

@@ -41,6 +41,7 @@ class NeatFileTreePlugin extends Plugin {
     // window covers every renderer (reading, live preview, hover popover, canvas)
     // with no markdown post-processor or CodeMirror extension.
     this.registerDomEvent(window, 'click', this.onNftLink.bind(this), true);
+    this.watchEditors();
     // Opening / switching to a file -> scroll the tree to reveal it.
     this.registerEvent(this.app.workspace.on('file-open', this.onActiveFile.bind(this)));
     // Note when a tree row that opens a file is pressed — a file row, or a folder
@@ -194,21 +195,58 @@ class NeatFileTreePlugin extends Plugin {
     const a = e.target.closest('a[href^="nft:"]');
     if (a) return this.followNft(e, a.getAttribute('href'));
     const span = e.target.closest('span.cm-link');
-    if (!span) return;
-    // Find the editor by DOM containment rather than trusting the active leaf: this is
-    // a capture-phase handler, so focus hasn't necessarily moved to the clicked note.
+    const href = span && this.nftHrefForSpan(span);
+    if (href) this.followNft(e, href);
+  }
+
+  // A Live Preview `span.cm-link` keeps its URL only in the CodeMirror document, never
+  // in the DOM, so map the span back to a document position and read the link out of
+  // the source line. Returns the `nft:` target, or null for any other kind of link.
+  nftHrefForSpan(span) {
+    // Find the editor by DOM containment rather than trusting the active leaf: the click
+    // path is a capture handler, so focus hasn't necessarily moved to the clicked note.
     const leaf = this.app.workspace.getLeavesOfType('markdown')
       .find((l) => l.view.contentEl && l.view.contentEl.contains(span));
     const cm = leaf && leaf.view.editor && leaf.view.editor.cm;
-    if (!cm || !cm.posAtDOM) return;
-    const pos = cm.posAtDOM(span);
+    if (!cm || !cm.posAtDOM) return null;
+    let pos;
+    try { pos = cm.posAtDOM(span); } catch (_) { return null; } // span detached mid-render
     const line = cm.state.doc.lineAt(pos);
     const off = pos - line.from;
-    // A line can hold several links, so take the one whose source range covers the
-    // clicked position. `<...>` is markdown's escape for a target with spaces.
+    // A line can hold several links, so take the one whose source range covers this
+    // position. `<...>` is markdown's escape for a target containing spaces.
     for (const m of line.text.matchAll(/\[[^\]]*\]\(<?(nft:[^)>]*)>?\)/g)) {
-      if (off >= m.index && off <= m.index + m[0].length) return this.followNft(e, m[1]);
+      if (off >= m.index && off <= m.index + m[0].length) return m[1];
     }
+    return null;
+  }
+
+  // Reading view can be styled straight off `a[href^="nft:"]`, but a Live Preview link
+  // carries no href in the DOM, so CSS alone can't tell an nft: link from any other.
+  // Tag those spans ourselves.
+  tagNftSpans(root) {
+    // `span.cm-link` is the label; `span.cm-url` is the collapsed `](url)` widget that
+    // carries Obsidian's external-link arrow — tag both so the arrow can be hidden.
+    for (const span of root.querySelectorAll('span.cm-link:not(.nft-link), span.cm-url:not(.nft-link)')) {
+      if (this.nftHrefForSpan(span)) span.classList.add('nft-link');
+    }
+  }
+
+  // One observer on the whole workspace, not per editor: CodeMirror swaps its
+  // `.cm-content` node on a mode switch, which silently detaches a node-scoped observer.
+  // Debounced to one frame; already-tagged spans are skipped, so tagging (itself a
+  // mutation) can't loop.
+  watchEditors() {
+    const root = this.app.workspace.containerEl || document.body;
+    const sweep = () => {
+      if (this._tagQueued) return;
+      this._tagQueued = true;
+      requestAnimationFrame(() => { this._tagQueued = false; this.tagNftSpans(root); });
+    };
+    const obs = new MutationObserver(sweep);
+    obs.observe(root, { childList: true, subtree: true });
+    this.register(() => obs.disconnect());
+    this.app.workspace.onLayoutReady(sweep);
   }
 
   // preventDefault is what keeps the note put: no navigation, no external-link handoff.
@@ -219,6 +257,7 @@ class NeatFileTreePlugin extends Plugin {
   }
 
   onunload() {
+    for (const el of document.querySelectorAll('.nft-link')) el.classList.remove('nft-link');
     document.body.classList.remove('nft-sticky', 'nft-accent-top', 'nft-accent-guides');
     document.body.style.removeProperty('--nft-row-h');
     for (let i = 0; i < LEVELS; i++) document.body.style.removeProperty('--nft-c' + i);
