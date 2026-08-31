@@ -353,6 +353,38 @@ class NeatFileTreeSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName('Reveal links')
+      .setDesc(
+        'Link to a path from inside a note and clicking it reveals that file or folder in the tree ' +
+        'instead of navigating — the note you are reading stays put. The link is drawn in this scheme\u2019s ' +
+        'color for the depth it points at. Nothing to switch on: a link only does this if you write one.'
+      );
+
+    const example = (label, lines) => {
+      const wrap = containerEl.createDiv();
+      wrap.style.cssText = 'margin:-6px 0 16px;';
+      const cap = wrap.createDiv({ text: label });
+      cap.style.cssText = 'font-size:var(--font-ui-smaller);color:var(--text-muted);margin-bottom:4px;';
+      const pre = wrap.createEl('pre');
+      pre.style.cssText =
+        'margin:0;padding:10px 12px;border-radius:6px;overflow-x:auto;user-select:text;' +
+        'background:var(--background-secondary);border:1px solid var(--background-modifier-border);' +
+        'font-size:var(--font-smaller);line-height:1.5;';
+      pre.createEl('code', { text: lines.join('\n') });
+    };
+
+    example('In a note — a folder, a file, and a path containing spaces:', [
+      '[My projects](nft:Work/Projects)',
+      '[Roadmap](nft:Work/Projects/Roadmap.md)',
+      '[Quick notes](<nft:Quick Notes/Inbox.md>)',
+    ]);
+    example('In a Base — a formula column that reveals instead of opening:', [
+      'formulas:',
+      '  reveal: "html(\\"<a href=\'nft:\\" + file.path + \\"\'>\\" + file.name + \\"</a>\\")"',
+      '# then use formula.reveal in a view\'s order: instead of file.name',
+    ]);
+
+    new Setting(containerEl)
       .setName('Color folder names')
       .setDesc('Color folder names by depth using the scheme below. The top level stays bold.')
       .addToggle((t) =>

@@ -40,6 +40,23 @@ vault easier to navigate.
 
 Each feature has its own toggle in the plugin settings, plus a **Row height**
 field to keep the sticky headers aligned if you use a larger interface font.
+(`nft:` links need no toggle — they only do anything if you write one.)
+
+### Reveal links from a Base
+
+A Base's file column opens the note. To make it reveal in the tree instead, add
+a formula column — `html()` lets a Base emit a real link, which the plugin picks
+up like any other:
+
+```yaml
+formulas:
+  reveal: "html(\"<a href='nft:\" + file.path + \"'>\" + file.name + \"</a>\")"
+```
+
+Then use `formula.reveal` in place of `file.name` in each view's `order:` (leave
+`sort:` alone — it can keep sorting on `file.name`), and give `formula.reveal`
+the column's `displayName`. Note a `.base` file is shared by every note that
+embeds it.
 
 ## Install
 
