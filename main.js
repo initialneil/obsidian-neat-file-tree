@@ -283,7 +283,24 @@ class NeatFileTreePlugin extends Plugin {
   followNft(e, href) {
     e.preventDefault();
     e.stopPropagation();
-    this.revealPath(this.nftPath(href));
+    const path = this.nftPath(href);
+    // Single click reveals; double click reveals AND opens. `detail` is the click
+    // count, so a double click arrives as detail 1 then detail 2 — the first click
+    // still reveals immediately (no timer, no lag) and the second adds the open.
+    this.revealPath(path);
+    if (e.detail >= 2) this.openNft(path);
+  }
+
+  // Open what the link points at. A link to a FOLDER opens that folder's folder note
+  // (the child sharing its name — `.md`, `.base`, whatever), which is the only thing a
+  // folder can meaningfully open; a folder without one is a no-op.
+  openNft(path) {
+    const target = this.app.vault.getAbstractFileByPath(path);
+    if (!target) return;
+    const file = target.extension
+      ? target
+      : (target.children || []).find((c) => c.extension && c.basename === target.name);
+    if (file) this.app.workspace.getLeaf(false).openFile(file);
   }
 
   // `nft:` -> a vault path. Links written by hand are usually percent-encoded, but a
@@ -355,9 +372,11 @@ class NeatFileTreeSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Reveal links')
       .setDesc(
-        'Link to a path from inside a note and clicking it reveals that file or folder in the tree ' +
-        'instead of navigating — the note you are reading stays put. The link is drawn in this scheme\u2019s ' +
-        'color for the depth it points at. Nothing to switch on: a link only does this if you write one.'
+        'Link to a path from inside a note. Single-click reveals that file or folder in the tree without ' +
+        'navigating — the note you are reading stays put; double-click reveals it AND opens it. ' +
+        '(Double-clicking a folder opens its folder note, if it has one.) The link is drawn in this ' +
+        'scheme\u2019s color for the depth it points at. Nothing to switch on: a link only does this if ' +
+        'you write one.'
       );
 
     const example = (label, lines) => {

@@ -31,12 +31,14 @@ vault easier to navigate.
   [A note](nft:Work/Projects/Roadmap.md)
   ```
 
-  Clicking scrolls and pulses that file or folder in the tree; the note you're
-  reading stays put. The link is drawn in your colour scheme's colour for the
-  **depth it points at**, so it matches the row it reveals, with a dotted
-  underline and a ▸ marker to set it apart from a normal link. Percent-encode
-  spaces (`Work%20Notes`) or wrap the target in angle brackets
-  (`[x](<nft:Work Notes>)`). Works in Reading view and Live Preview.
+  **Single-click** scrolls and pulses that file or folder in the tree; the note
+  you're reading stays put. **Double-click** reveals it *and* opens it — so one
+  link does both jobs. (Double-clicking a folder opens its folder note, if it has
+  one.) The link is drawn in your colour scheme's colour for the **depth it
+  points at**, so it matches the row it reveals, with a dotted underline and a ▸
+  marker to set it apart from a normal link. Percent-encode spaces
+  (`Work%20Notes`) or wrap the target in angle brackets (`[x](<nft:Work Notes>)`).
+  Works in Reading view and Live Preview.
 
 Each feature has its own toggle in the plugin settings, plus a **Row height**
 field to keep the sticky headers aligned if you use a larger interface font.
